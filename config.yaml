@@ -1,0 +1,75 @@
+strategies:
+  momentum:
+    enabled: true
+    timeframe: '1h'
+    ema_fast: 12
+    ema_slow: 26
+    rsi_period: 14
+    volume_threshold: 1.5
+    trailing_stop_atr_mult: 2.0
+    max_positions_per_market: 3
+    position_size_pct: 2.0
+
+  dca:
+    enabled: true
+    schedule: 'daily'
+    base_amount: 50
+    dip_threshold_pct: 5
+    dip_multiplier: 1.5
+    crash_threshold_pct: 15
+    crash_multiplier: 2.0
+    allocation:
+      BTC/USDT: 0.25
+      ETH/USDT: 0.20
+      SOL/USDT: 0.10
+      AAPL: 0.15
+      NVDA: 0.10
+      SHEL.L: 0.10
+      AZN.L: 0.10
+
+  grid:
+    enabled: true
+    num_levels: 10
+    spacing_pct: 1.5
+    auto_range: true
+    recalculate_weekly: true
+    budget_per_asset_pct: 5
+
+risk:
+  total_budget: 10000
+  per_trade_max_pct: 2
+  per_asset_max_pct: 15
+  per_market_max_pct: 50
+  daily_loss_limit_pct: 3
+  weekly_loss_limit_pct: 7
+  max_open_positions: 15
+  max_concurrent_orders_per_exchange: 5
+  cash_reserve_pct: 20
+
+assets:
+  crypto:
+    - symbol: BTC/USDT
+      strategies: [momentum, dca, grid]
+    - symbol: ETH/USDT
+      strategies: [momentum, dca, grid]
+    - symbol: SOL/USDT
+      strategies: [momentum, dca]
+  us_stocks:
+    - symbol: AAPL
+      strategies: [momentum, dca]
+    - symbol: NVDA
+      strategies: [momentum, dca, grid]
+    - symbol: TSLA
+      strategies: [momentum, grid]
+  uk_stocks:
+    - symbol: SHEL.L
+      strategies: [dca, grid]
+    - symbol: AZN.L
+      strategies: [dca, momentum]
+    - symbol: HSBA.L
+      strategies: [dca]
+
+paper_trading:
+  initial_balance: 10000
+  slippage_pct: 0.05
+  fee_pct: 0.1
