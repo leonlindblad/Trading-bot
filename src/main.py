@@ -19,6 +19,8 @@ from src.execution.order_manager import OrderManager
 from src.portfolio.manager import PortfolioManager
 from src.risk.circuit_breakers import CircuitBreakerManager
 from src.risk.manager import RiskManager
+from src.risk.position_sizer import PositionSizer
+from src.strategies.manager import StrategyManager
 
 
 class TradingBot:
@@ -37,6 +39,7 @@ class TradingBot:
         self.circuit_breakers: CircuitBreakerManager | None = None
         self.execution_engine: ExecutionEngine | None = None
         self.order_manager: OrderManager | None = None
+        self.strategy_manager: StrategyManager | None = None
 
     async def start(self) -> None:
         """Initialize and start all components."""
@@ -85,7 +88,17 @@ class TradingBot:
         )
         await self.execution_engine.start()
 
-        # Start price feeds
+        # Strategy manager — evaluates strategies against price data
+        position_sizer = PositionSizer(self.config.risk, self.portfolio)
+        self.strategy_manager = StrategyManager(
+            event_bus=self.event_bus,
+            config=self.config,
+            portfolio=self.portfolio,
+            position_sizer=position_sizer,
+        )
+        await self.strategy_manager.start()
+
+        # Start price feeds (must be after strategy manager so it receives events)
         for market_name, connector in self.connectors.items():
             market_assets = self.config.get_assets_for_market(market_name)
             symbols = [a.symbol for a in market_assets]
@@ -110,6 +123,9 @@ class TradingBot:
         """Gracefully shut down all components."""
         logger.info("Shutting down Trading Bot...")
         self._running = False
+
+        if self.strategy_manager:
+            await self.strategy_manager.stop()
 
         for task in self._tasks:
             task.cancel()

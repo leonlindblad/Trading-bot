@@ -81,26 +81,24 @@ def create_router() -> APIRouter:
 
     @router.get("/strategies")
     async def strategies(request: Request):
-        """Strategy status and configuration."""
+        """Strategy status and live state."""
         bot = _get_bot(request)
         if not bot:
             return {"error": "Bot not running"}
 
+        # Live status from strategy manager if available
+        if bot.strategy_manager:
+            return bot.strategy_manager.get_status()
+
+        # Fallback to config-only status
         return {
-            "momentum": {
-                "enabled": bot.config.momentum.enabled,
-                "timeframe": bot.config.momentum.timeframe,
+            "strategies": {
+                "momentum": {"enabled": bot.config.momentum.enabled},
+                "dca": {"enabled": bot.config.dca.enabled},
+                "grid": {"enabled": bot.config.grid.enabled},
             },
-            "dca": {
-                "enabled": bot.config.dca.enabled,
-                "schedule": bot.config.dca.schedule,
-                "base_amount": bot.config.dca.base_amount,
-            },
-            "grid": {
-                "enabled": bot.config.grid.enabled,
-                "num_levels": bot.config.grid.num_levels,
-                "spacing_pct": bot.config.grid.spacing_pct,
-            },
+            "eval_count": 0,
+            "signal_count": 0,
         }
 
     @router.post("/strategies/{name}/toggle")
