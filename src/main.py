@@ -17,6 +17,7 @@ from src.event_bus import EventBus
 from src.execution.engine import ExecutionEngine
 from src.execution.order_manager import OrderManager
 from src.portfolio.manager import PortfolioManager
+from src.alerting.telegram import TelegramAlerter
 from src.risk.circuit_breakers import CircuitBreakerManager
 from src.risk.manager import RiskManager
 from src.risk.position_sizer import PositionSizer
@@ -87,6 +88,14 @@ class TradingBot:
             connectors=self.connectors,
         )
         await self.execution_engine.start()
+
+        # Telegram alerts (sends trade notifications if configured)
+        self.telegram = TelegramAlerter(
+            bot_token=self.config.settings.telegram_bot_token,
+            chat_id=self.config.settings.telegram_chat_id,
+            event_bus=self.event_bus,
+        )
+        await self.telegram.start()
 
         # Strategy manager — evaluates strategies against price data
         position_sizer = PositionSizer(self.config.risk, self.portfolio)
