@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import APIRouter, Request
 
@@ -141,6 +142,19 @@ def create_router() -> APIRouter:
             if bot.circuit_breakers
             else None,
         }
+
+    @router.get("/logs")
+    async def logs(limit: int = 100):
+        """Return recent log lines from the log file."""
+        log_file = Path("logs/trading_bot.log")
+        if not log_file.exists():
+            return {"lines": []}
+        try:
+            with open(log_file) as f:
+                all_lines = f.readlines()
+            return {"lines": [line.rstrip() for line in all_lines[-limit:]]}
+        except Exception:
+            return {"lines": []}
 
     @router.post("/emergency-stop")
     async def emergency_stop(request: Request):
