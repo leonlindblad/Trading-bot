@@ -5,14 +5,14 @@ strategies:
     ema_fast: 12
     ema_slow: 26
     rsi_period: 14
-    volume_threshold: 1.5
+    volume_threshold: 1.2
     trailing_stop_atr_mult: 2.0
     max_positions_per_market: 3
     position_size_pct: 2.0
 
   dca:
     enabled: true
-    schedule: 'daily'
+    schedule: 'hourly'
     base_amount: 50
     dip_threshold_pct: 5
     dip_multiplier: 1.5

@@ -7,6 +7,8 @@ from pathlib import Path
 
 from fastapi import APIRouter, Request
 
+from src.api.market_feed import get_market_feed
+
 
 def create_router() -> APIRouter:
     """Create API router with all endpoints."""
@@ -155,6 +157,11 @@ def create_router() -> APIRouter:
             return {"lines": [line.rstrip() for line in all_lines[-limit:]]}
         except Exception:
             return {"lines": []}
+
+    @router.get("/market-feed")
+    async def market_feed():
+        """Live market data for major cryptos, US stocks, and UK stocks."""
+        return await get_market_feed()
 
     @router.post("/emergency-stop")
     async def emergency_stop(request: Request):

@@ -199,7 +199,8 @@ class StrategyManager:
             return
 
         price = float(price_str)
-        candle_closed = self._aggregator.add_tick(symbol, price)
+        volume = float(event.data.get("volume", 1.0))
+        candle_closed = self._aggregator.add_tick(symbol, price, volume)
 
         if candle_closed:
             await self._evaluate_strategies(symbol)

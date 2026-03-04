@@ -64,6 +64,23 @@ tr:last-child td { border-bottom: none; }
 .strat-card { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px; }
 .strat-card h4 { font-size: 13px; margin-bottom: 6px; display: flex; justify-content: space-between; }
 .strat-card .stat { font-size: 12px; color: #8b949e; }
+.tab-bar { display: flex; gap: 0; border-bottom: 1px solid #30363d; background: #161b22; }
+.tab-btn { padding: 10px 20px; background: none; border: none; border-bottom: 2px solid transparent; color: #8b949e; cursor: pointer; font-size: 13px; font-weight: 500; }
+.tab-btn:hover { color: #e1e4e8; }
+.tab-btn.active { color: #58a6ff; border-bottom-color: #58a6ff; }
+.market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; padding: 16px 20px; }
+.market-item { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+.market-item .mi-header { display: flex; justify-content: space-between; align-items: center; }
+.market-item .mi-symbol { font-weight: 700; font-size: 14px; }
+.market-item .mi-name { font-size: 11px; color: #8b949e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.market-item .mi-price { font-size: 18px; font-weight: 600; margin: 4px 0; }
+.market-item .mi-change { font-size: 12px; font-weight: 600; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+.market-item .mi-change.up { background: #0d4429; color: #3fb950; }
+.market-item .mi-change.down { background: #490b10; color: #f85149; }
+.market-item .mi-details { font-size: 11px; color: #8b949e; display: flex; justify-content: space-between; margin-top: 4px; }
+.market-loading { text-align: center; padding: 40px; color: #8b949e; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 </style>
 </head>
 <body>
@@ -78,6 +95,27 @@ tr:last-child td { border-bottom: none; }
 </div>
 <div class="container">
   <div class="grid" id="summary-cards"></div>
+
+  <div class="section">
+    <div class="section-header">
+      <h2>Live Market Feed</h2>
+      <span class="refresh-info" id="market-feed-time"></span>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('crypto')">Crypto</button>
+      <button class="tab-btn" onclick="switchTab('us_stocks')">US Stocks</button>
+      <button class="tab-btn" onclick="switchTab('uk_stocks')">UK Stocks</button>
+    </div>
+    <div class="tab-content active" id="tab-crypto">
+      <div class="market-grid" id="market-crypto"><div class="market-loading">Loading crypto prices...</div></div>
+    </div>
+    <div class="tab-content" id="tab-us_stocks">
+      <div class="market-grid" id="market-us_stocks"><div class="market-loading">Loading US stocks...</div></div>
+    </div>
+    <div class="tab-content" id="tab-uk_stocks">
+      <div class="market-grid" id="market-uk_stocks"><div class="market-loading">Loading UK stocks...</div></div>
+    </div>
+  </div>
 
   <div class="section">
     <div class="section-header">
@@ -300,6 +338,74 @@ function clearLogs() {
   document.getElementById('logs-container').innerHTML = '';
 }
 
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + tabName).classList.add('active');
+}
+
+function formatMarketCap(val) {
+  if (!val) return '-';
+  if (val >= 1e12) return '$' + (val / 1e12).toFixed(2) + 'T';
+  if (val >= 1e9) return '$' + (val / 1e9).toFixed(2) + 'B';
+  if (val >= 1e6) return '$' + (val / 1e6).toFixed(1) + 'M';
+  return '$' + val.toLocaleString();
+}
+
+function formatVolume(val) {
+  if (!val) return '-';
+  if (val >= 1e9) return (val / 1e9).toFixed(2) + 'B';
+  if (val >= 1e6) return (val / 1e6).toFixed(1) + 'M';
+  if (val >= 1e3) return (val / 1e3).toFixed(1) + 'K';
+  return val.toLocaleString();
+}
+
+function renderMarketItems(items, containerId, currencySymbol) {
+  const container = document.getElementById(containerId);
+  if (!items || items.length === 0) {
+    container.innerHTML = '<div class="market-loading">No data available</div>';
+    return;
+  }
+  container.innerHTML = items.map(item => {
+    const price = item.price != null ? item.price : 0;
+    const change = item.change_24h != null ? item.change_24h : 0;
+    const changeClass = change >= 0 ? 'up' : 'down';
+    const changeSign = change >= 0 ? '+' : '';
+    const priceStr = price >= 1000 ? currencySymbol + price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+      : price >= 1 ? currencySymbol + price.toFixed(2)
+      : currencySymbol + price.toFixed(4);
+    return `
+      <div class="market-item">
+        <div class="mi-header">
+          <span class="mi-symbol">${escapeHtml(item.symbol)}</span>
+          <span class="mi-change ${changeClass}">${changeSign}${change.toFixed(2)}%</span>
+        </div>
+        <div class="mi-name">${escapeHtml(item.name || '')}</div>
+        <div class="mi-price">${priceStr}</div>
+        <div class="mi-details">
+          <span>MCap: ${formatMarketCap(item.market_cap)}</span>
+          <span>Vol: ${formatVolume(item.volume_24h)}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function updateMarketFeed() {
+  try {
+    const data = await fetchJSON('/market-feed');
+    if (data.crypto) renderMarketItems(data.crypto, 'market-crypto', '$');
+    if (data.us_stocks) renderMarketItems(data.us_stocks, 'market-us_stocks', '$');
+    if (data.uk_stocks) renderMarketItems(data.uk_stocks, 'market-uk_stocks', '');
+    const timeEl = document.getElementById('market-feed-time');
+    if (data.timestamp) {
+      const d = new Date(data.timestamp * 1000);
+      timeEl.textContent = 'Updated: ' + d.toLocaleTimeString();
+    }
+  } catch(e) { console.error('Market feed fetch failed', e); }
+}
+
 async function toggleStrategy(name) {
   await fetch(API + '/strategies/' + name + '/toggle', {method: 'POST'});
   updateStrategies();
@@ -317,7 +423,9 @@ async function refresh() {
 }
 
 refresh();
+updateMarketFeed();
 setInterval(refresh, 5000);
+setInterval(updateMarketFeed, 30000);
 </script>
 </body>
 </html>"""

@@ -449,6 +449,10 @@ class PaperConnector(BaseConnector):
                     )
                     self._prices[symbol] = new_price
 
+                    # Generate variable volume (lognormal distribution for realistic spikes)
+                    base_volume = random.lognormvariate(0, 0.5)
+                    tick_volume = max(0.1, base_volume)
+
                     # Publish price update event
                     await self.event_bus.publish(
                         Event(
@@ -456,6 +460,7 @@ class PaperConnector(BaseConnector):
                             data={
                                 "symbol": symbol,
                                 "price": str(new_price),
+                                "volume": tick_volume,
                                 "market": self.market.value,
                                 "timestamp": datetime.now(timezone.utc).isoformat(),
                             },
