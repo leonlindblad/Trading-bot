@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ ./src/
 COPY config.yaml .
+COPY crypto_config.yaml .
 
 RUN mkdir -p /app/logs
 

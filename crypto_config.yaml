@@ -1,0 +1,78 @@
+strategies:
+  momentum:
+    enabled: true
+    timeframe: '1h'
+    ema_fast: 9
+    ema_slow: 21
+    rsi_period: 14
+    volume_threshold: 1.5
+    trailing_stop_atr_mult: 2.5
+    max_positions_per_market: 5
+    position_size_pct: 2.0
+
+  dca:
+    enabled: true
+    schedule: 'hourly'
+    base_amount: 25
+    dip_threshold_pct: 5
+    dip_multiplier: 1.5
+    crash_threshold_pct: 15
+    crash_multiplier: 2.0
+    allocation:
+      BTC/USDT: 0.20
+      ETH/USDT: 0.15
+      SOL/USDT: 0.10
+      XRP/USDT: 0.10
+      ADA/USDT: 0.08
+      DOGE/USDT: 0.07
+      AVAX/USDT: 0.08
+      DOT/USDT: 0.07
+      LINK/USDT: 0.08
+      MATIC/USDT: 0.07
+
+  grid:
+    enabled: true
+    num_levels: 10
+    spacing_pct: 2.0
+    auto_range: true
+    recalculate_weekly: true
+    budget_per_asset_pct: 5
+
+risk:
+  total_budget: 10000
+  per_trade_max_pct: 2
+  per_asset_max_pct: 20
+  per_market_max_pct: 100
+  daily_loss_limit_pct: 5
+  weekly_loss_limit_pct: 10
+  max_open_positions: 20
+  max_concurrent_orders_per_exchange: 10
+  cash_reserve_pct: 15
+
+assets:
+  crypto:
+    - symbol: BTC/USDT
+      strategies: [momentum, dca, grid]
+    - symbol: ETH/USDT
+      strategies: [momentum, dca, grid]
+    - symbol: SOL/USDT
+      strategies: [momentum, dca, grid]
+    - symbol: XRP/USDT
+      strategies: [momentum, dca, grid]
+    - symbol: ADA/USDT
+      strategies: [momentum, dca, grid]
+    - symbol: DOGE/USDT
+      strategies: [momentum, dca]
+    - symbol: AVAX/USDT
+      strategies: [momentum, dca, grid]
+    - symbol: DOT/USDT
+      strategies: [momentum, dca, grid]
+    - symbol: LINK/USDT
+      strategies: [momentum, dca, grid]
+    - symbol: MATIC/USDT
+      strategies: [momentum, dca]
+
+paper_trading:
+  initial_balance: 10000
+  slippage_pct: 0.05
+  fee_pct: 0.1
